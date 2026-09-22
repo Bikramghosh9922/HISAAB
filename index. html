@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cloud: #EDE9E1;
+    --cloud-alt: #E2DDD2;
+    --card: #F7F5F0;
+    --ink: #2A2A26;
+    --ink-soft: #6B6860;
+    --teal: #1F6B66;
+    --teal-dark: #164F4B;
+    --teal-tint: rgba(31,107,102,0.10);
+    --amber: #A9702B;
+    --amber-tint: rgba(169,112,43,0.12);
+    --danger: #9C3B3B;
+    --line: rgba(42,42,38,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--cloud);
+    color: var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    padding-bottom: 50px;
+  }
+  .wrap{ max-width: 960px; margin:0 auto; padding: 0 18px; }
+  header{
+    padding: 34px 0 20px 0;
+    display:flex;
+    justify-content: space-between;
+    align-items:flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 2px solid var(--teal);
+    margin-bottom: 22px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0 0 4px 0;
+  }
+  .subtitle{ color: var(--ink-soft); font-size: 13.5px; margin:0; max-width: 46ch; }
+
+  .summary-row{ display:flex; gap:12px; flex-wrap: wrap; margin-bottom: 22px; }
+  .summary-card{
+    flex: 1 1 130px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--teal);
+    padding: 12px 14px;
+  }
+  .summary-card.warn{ border-top-color: var(--amber); }
+  .summary-card .label{ font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .summary-card .value{ font-family:'IBM Plex Mono', monospace; font-weight: 600; font-size: 18px; }
+
+  .toolbar{ display:flex; gap:10px; margin-bottom: 18px; flex-wrap: wrap; align-items:center; }
+  .toolbar input[type="text"]{
+    flex: 1 1 190px; padding: 10px 12px; border: 1px solid var(--line);
+    background: var(--card); font-size: 14px; color: var(--ink); font-family:'Inter',sans-serif;
+  }
+  .toolbar select{
+    padding: 10px 10px; border: 1px solid var(--line); background: var(--card);
+    font-size: 13px; color: var(--ink); font-family:'Inter',sans-serif;
+  }
+  select:focus, input:focus, button:focus, textarea:focus{ outline: 2px solid var(--teal); outline-offset: 1px; }
+  button{ font-family:'Inter',sans-serif; font-weight:600; font-size: 14px; cursor:pointer; border:none; padding: 10px 16px; }
+  .btn-primary{ background: var(--teal); color: #fff; }
+  .btn-primary:hover{ background: var(--teal-dark); }
+  .btn-ghost{ background: transparent; border: 1px solid var(--ink); color: var(--ink); }
+  .btn-ghost:hover{ background: rgba(42,42,38,0.06); }
+  .btn-text-edit{ background:none; border:none; color: var(--teal-dark); font-weight:600; text-decoration: underline; padding: 4px 6px; }
+  .btn-text-danger{ background:none; border:none; color: var(--danger); font-weight:600; text-decoration: underline; padding: 4px 6px; }
+  .btn-small{ font-size: 12.5px; padding: 7px 10px; }
+
+  form.entry{ background: var(--card); border: 1px solid var(--line); padding: 20px; margin-bottom: 24px; }
+  .section-label{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin: 18px 0 8px 0; }
+  .section-label:first-child{ margin-top: 0; }
+  .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:560px){ .grid2{ grid-template-columns: 1fr; } }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:12px; color: var(--ink-soft); }
+  .field input, .field select{ padding: 9px 10px; border: 1px solid var(--line); background:#fff; font-size:14px; color: var(--ink); font-family:'Inter',sans-serif; }
+  .qty-row{ display:flex; gap:8px; }
+  .qty-row input{ flex:2; }
+  .qty-row select{ flex:1; }
+  .hint{ font-family:'IBM Plex Mono', monospace; font-size: 12px; color: var(--teal-dark); margin-top:2px; }
+
+  .bulk-box{ background: var(--teal-tint); border: 1px dashed var(--teal); padding: 12px; margin-bottom: 4px; }
+  .bulk-box .grid2{ margin-bottom: 8px; }
+  .bulk-box-title{ font-size: 12.5px; font-weight:600; color: var(--teal-dark); margin-bottom: 8px; }
+
+  .form-actions{ display:flex; gap:10px; margin-top: 18px; flex-wrap: wrap; }
+  .error-msg{ color: var(--danger); font-size: 13px; margin-top: 8px; }
+  .save-error{ background:#F6E4E4; border:1px solid var(--danger); color:var(--danger); padding:10px 14px; font-size:13px; margin-bottom:16px; }
+
+  .cards{ display:flex; flex-direction:column; gap: 10px; }
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--teal);
+    padding: 14px 16px;
+  }
+  .card.low-stock{ border-left-color: var(--amber); }
+  .card-top{ display:flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .card-title{ display:flex; align-items:baseline; gap: 8px; flex-wrap: wrap; }
+  .item-name{ font-family:'Fraunces', serif; font-weight:600; font-size: 17px; }
+  .item-category{ font-size: 12px; color: var(--ink-soft); background: var(--cloud-alt); padding: 2px 8px; }
+  .badge-low{ font-size: 11px; font-weight:700; color: var(--amber); background: var(--amber-tint); padding: 2px 8px; }
+  .updated-at{ font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+  .stat-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 10px 16px; margin-bottom: 10px;
+  }
+  .stat{ display:flex; flex-direction:column; gap: 2px; }
+  .stat .k{ font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+  .stat .v{ font-family:'IBM Plex Mono', monospace; font-size: 14px; }
+  .stat .v.strong{ font-weight: 700; }
+  .stat .v.teal{ color: var(--teal-dark); }
+  .stat .v.danger{ color: var(--danger); }
+  .card-actions{ display:flex; gap: 4px; justify-content: flex-end; }
+
+  .empty-state{ padding: 50px 20px; text-align:center; color: var(--ink-soft); background: var(--card); border: 1px dashed var(--line); }
+  .empty-state h2{ font-family:'Fraunces', serif; font-size: 19px; color: var(--ink); margin-bottom: 6px; }
+
+  footer{ margin-top: 26px; display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 10px; }
+  .reset-link{ background:none; border:none; color: var(--ink-soft); font-size: 12px; text-decoration: underline; cursor:pointer; padding:0; }
+  .loading{ padding: 60px 0; text-align:center; color: var(--ink-soft); font-family:'IBM Plex Mono', monospace; font-size: 13px; }
+
+  .export-box{ margin-top: 10px; }
+  .export-box textarea{
+    width: 100%; min-height: 90px; font-family:'IBM Plex Mono', monospace; font-size: 12px;
+    border: 1px solid var(--line); padding: 8px; background: #fff; color: var(--ink);
+  }
+  .copy-msg{ font-size: 12px; color: var(--teal-dark); margin-left: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Stock Register</h1>
+      <p class="subtitle">Track items, buying &amp; selling price per kg / litre / piece, and stock value — worked out automatically.</p>
+    </div>
+    <button class="btn-ghost btn-small" id="exportBtn">Export as CSV</button>
+  </header>
+
+  <div id="saveError"></div>
+  <div id="exportHost"></div>
+  <div id="summary" class="summary-row"></div>
+
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search items or category…">
+    <select id="sortSelect">
+      <option value="name">Sort: Name (A–Z)</option>
+      <option value="value-desc">Sort: Value (high–low)</option>
+      <option value="qty-asc">Sort: Quantity (low–high)</option>
+      <option value="low-first">Sort: Low stock first</option>
+      <option value="updated-desc">Sort: Recently updated</option>
+    </select>
+    <button class="btn-primary" id="toggleFormBtn">+ Add item</button>
+  </div>
+
+  <div id="formHost"></div>
+  <div id="registerBody">
+    <div class="loading">Loading register…</div>
+  </div>
+
+  <footer>
+    <span class="subtitle" id="footerNote"></span>
+    <button class="reset-link" id="resetBtn">Clear all items</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'stock-register-items-v2';
+  let items = [];
+  let loaded = false;
+  let editingId = null;
+  let formOpen = false;
+  let searchTerm = '';
+  let sortMode = 'name';
+  let saveErrorMsg = '';
+  let exportOpen = false;
+
+  const UNIT_CONFIG = {
+    weight: { base:'kg', sub:'g', subPerBase:1000, baseLabel:'kg', subLabel:'g', qtyUnits:['kg','g'] },
+    volume: { base:'litre', sub:'ml', subPerBase:1000, baseLabel:'litre', subLabel:'ml', qtyUnits:['litre','ml'] },
+    count:  { base:'piece', sub:null, subPerBase:1, baseLabel:'piece', subLabel:null, qtyUnits:['piece'] }
+  };
+
+  function fmtINR(n){ if(n===null||isNaN(n)) return '—'; return '₹' + n.toLocaleString('en-IN',{maximumFractionDigits:2}); }
+  function fmtNum(n){ if(n===null||isNaN(n)) return '—'; return n.toLocaleString('en-IN',{maximumFractionDigits:3}); }
+  function fmtDate(ts){
+    if(!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function qtyToBase(val, unit, unitType){
+    const cfg = UNIT_CONFIG[unitType];
+    if(unit === cfg.base) return val;
+    if(unit === cfg.sub) return val / cfg.subPerBase;
+    return val;
+  }
+
+  function computeItem(item){
+    const cfg = UNIT_CONFIG[item.unitType];
+    const qtyInBase = qtyToBase(item.qtyValue, item.qtyUnit, item.unitType);
+    const totalValue = qtyInBase * item.priceBase;
+    const priceSub = cfg.sub ? item.priceBase / cfg.subPerBase : null;
+    let sellingSub = null, profitBase = null, marginPct = null, totalProfit = null;
+    if(item.sellingPriceBase !== null && item.sellingPriceBase !== undefined && !isNaN(item.sellingPriceBase)){
+      sellingSub = cfg.sub ? item.sellingPriceBase / cfg.subPerBase : null;
+      profitBase = item.sellingPriceBase - item.priceBase;
+      marginPct = item.sellingPriceBase > 0 ? (profitBase / item.sellingPriceBase) * 100 : null;
+      totalProfit = profitBase * qtyInBase;
+    }
+    const isLowStock = (item.lowStockThreshold !== null && item.lowStockThreshold !== undefined && !isNaN(item.lowStockThreshold))
+      ? qtyInBase <= item.lowStockThreshold : false;
+    return { qtyInBase, totalValue, priceSub, sellingSub, profitBase, marginPct, totalProfit, isLowStock };
+  }
+
+  function loadItems(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      items = raw ? JSON.parse(raw) : [];
+    }catch(e){ items = []; }
+    loaded = true;
+    render();
+  }
+  function saveItems(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      saveErrorMsg = '';
+    }catch(e){ saveErrorMsg = "Couldn't save your changes — your browser's storage may be full or disabled."; }
+    render();
+  }
+
+  function openAddForm(){ editingId = null; formOpen = true; render(); }
+  function openEditForm(id){
+    editingId = id; formOpen = true; render();
+    setTimeout(()=>{ document.getElementById('formHost').scrollIntoView({behavior:'smooth', block:'start'}); }, 0);
+  }
+  function closeForm(){ formOpen = false; editingId = null; render(); }
+  function deleteItem(id){
+    if(!confirm('Remove this item from the register?')) return;
+    items = items.filter(i => i.id !== id);
+    saveItems();
+  }
+
+  function handleFormSubmit(e){
+    e.preventDefault();
+    const f = e.target;
+    const name = f.name.value.trim();
+    const category = f.category.value.trim();
+    const unitType = f.unitType.value;
+    const priceBase = parseFloat(f.priceBase.value);
+    const qtyValue = parseFloat(f.qtyValue.value);
+    const qtyUnit = f.qtyUnit.value;
+    const sellingRaw = f.sellingPriceBase.value.trim();
+    const sellingPriceBase = sellingRaw === '' ? null : parseFloat(sellingRaw);
+    const lowRaw = f.lowStockThreshold.value.trim();
+    const lowStockThreshold = lowRaw === '' ? null : parseFloat(lowRaw);
+    const errEl = document.getElementById('formError');
+
+    if(!name){ errEl.textContent = 'Item name is required.'; return; }
+    if(isNaN(priceBase) || priceBase < 0){ errEl.textContent = 'Enter a valid buying price.'; return; }
+    if(isNaN(qtyValue) || qtyValue < 0){ errEl.textContent = 'Enter a valid quantity.'; return; }
+    if(sellingPriceBase !== null && (isNaN(sellingPriceBase) || sellingPriceBase < 0)){ errEl.textContent = 'Enter a valid selling price, or leave it blank.'; return; }
+    if(lowStockThreshold !== null && (isNaN(lowStockThreshold) || lowStockThreshold < 0)){ errEl.textContent = 'Enter a valid low-stock level, or leave it blank.'; return; }
+    errEl.textContent = '';
+
+    const now = Date.now();
+    if(editingId){
+      items = items.map(i => i.id === editingId ? { ...i, name, category, unitType, priceBase, qtyValue, qtyUnit, sellingPriceBase, lowStockThreshold, updatedAt: now } : i);
+    } else {
+      items.push({
+        id: 'item-' + now + '-' + Math.random().toString(36).slice(2,7),
+        name, category, unitType, priceBase, qtyValue, qtyUnit, sellingPriceBase, lowStockThreshold, updatedAt: now
+      });
+    }
+    formOpen = false; editingId = null;
+    saveItems();
+  }
+
+  function renderUnitOptions(unitType, selected){
+    const cfg = UNIT_CONFIG[unitType];
+    return cfg.qtyUnits.map(u => `<option value="${u}" ${u===selected?'selected':''}>${u}</option>`).join('');
+  }
+
+  function renderForm(){
+    if(!formOpen) return '';
+    const editing = editingId ? items.find(i => i.id === editingId) : null;
+    const unitType = editing ? editing.unitType : 'weight';
+    const cfg = UNIT_CONFIG[unitType];
+
+    return `
+      <form class="entry" id="itemForm">
+        <div class="section-label">Item</div>
+        <div class="grid2">
+          <div class="field">
+            <label for="f-name">Item name</label>
+            <input type="text" id="f-name" name="name" value="${editing?escapeAttr(editing.name):''}" placeholder="e.g. Mustard oil" required>
+          </div>
+          <div class="field">
+            <label for="f-category">Category (optional)</label>
+            <input type="text" id="f-category" name="category" value="${editing?escapeAttr(editing.category||''):''}" placeholder="e.g. Groceries">
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label for="f-unitType">Sold / measured by</label>
+          <select id="f-unitType" name="unitType" style="max-width:260px;">
+            <option value="weight" ${unitType==='weight'?'selected':''}>Weight (kg / g)</option>
+            <option value="volume" ${unitType==='volume'?'selected':''}>Volume (litre / ml)</option>
+            <option value="count" ${unitType==='count'?'selected':''}>Piece (count)</option>
+          </select>
+        </div>
+
+        <div class="section-label">Buying price</div>
+        <div class="bulk-box">
+          <div class="bulk-box-title">Work it out from a bulk purchase</div>
+          <div class="grid2">
+            <div class="field">
+              <label for="f-bulkAmount">Total amount paid</label>
+              <input type="number" step="0.01" min="0" id="f-bulkAmount" placeholder="e.g. 2500">
+            </div>
+            <div class="field">
+              <label>For how much ${cfg.baseLabel==='piece' ? '(pieces)' : (cfg.baseLabel+' / '+cfg.subLabel)}</label>
+              <div class="qty-row">
+                <input type="number" step="0.001" min="0" id="f-bulkQty" placeholder="e.g. 25">
+                <select id="f-bulkUnit">${renderUnitOptions(unitType, cfg.base)}</select>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-ghost btn-small" id="bulkCalcBtn">Use this rate ↓</button>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div class="field">
+            <label for="f-priceBase">Buying price per <span id="baseUnitLabel">${cfg.baseLabel}</span></label>
+            <input type="number" step="0.01" min="0" id="f-priceBase" name="priceBase" value="${editing?editing.priceBase:''}" placeholder="0.00" required>
+            <span class="hint" id="priceSubHint"></span>
+          </div>
+          <div class="field">
+            <label for="f-sellingPriceBase">Selling price per <span id="baseUnitLabel2">${cfg.baseLabel}</span> (optional)</label>
+            <input type="number" step="0.01" min="0" id="f-sellingPriceBase" name="sellingPriceBase" value="${editing && editing.sellingPriceBase!==null && editing.sellingPriceBase!==undefined ? editing.sellingPriceBase : ''}" placeholder="0.00">
+            <span class="hint" id="profitHint"></span>
+          </div>
+        </div>
+
+        <div class="section-label">Stock on hand</div>
+        <div class="grid2">
+          <div class="field">
+            <label>Quantity in stock</label>
+            <div class="qty-row">
+              <input type="number" step="0.001" min="0" id="f-qtyValue" name="qtyValue" value="${editing?editing.qtyValue:''}" placeholder="0" required>
+              <select id="f-qtyUnit" name="qtyUnit">${renderUnitOptions(unitType, editing?editing.qtyUnit:cfg.base)}</select>
+            </div>
+            <span class="hint" id="totalValueHint"></span>
+          </div>
+          <div class="field">
+            <label for="f-lowStock">Low-stock alert at (in ${cfg.baseLabel}, optional)</label>
+            <input type="number" step="0.001" min="0" id="f-lowStock" name="lowStockThreshold" value="${editing && editing.lowStockThreshold!==null && editing.lowStockThreshold!==undefined ? editing.lowStockThreshold : ''}" placeholder="e.g. 2">
+          </div>
+        </div>
+
+        <div id="formError" class="error-msg"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">${editing?'Save changes':'Add to register'}</button>
+          <button type="button" class="btn-ghost" id="cancelFormBtn">Cancel</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function wireFormEvents(){
+    const form = document.getElementById('itemForm');
+    if(!form) return;
+    form.addEventListener('submit', handleFormSubmit);
+    document.getElementById('cancelFormBtn').addEventListener('click', closeForm);
+
+    const unitTypeSel = form.unitType;
+    const qtyUnitSel = form.qtyUnit;
+    const bulkUnitSel = document.getElementById('f-bulkUnit');
+    const priceInput = form.priceBase;
+    const sellingInput = form.sellingPriceBase;
+    const qtyInput = form.qtyValue;
+
+    function refreshUnitDependent(){
+      const cfg = UNIT_CONFIG[unitTypeSel.value];
+      document.getElementById('baseUnitLabel').textContent = cfg.baseLabel;
+      document.getElementById('baseUnitLabel2').textContent = cfg.baseLabel;
+      qtyUnitSel.innerHTML = renderUnitOptions(unitTypeSel.value, cfg.base);
+      bulkUnitSel.innerHTML = renderUnitOptions(unitTypeSel.value, cfg.base);
+      updateHints();
+    }
+    function updateHints(){
+      const cfg = UNIT_CONFIG[unitTypeSel.value];
+      const priceVal = parseFloat(priceInput.value);
+      const sellVal = parseFloat(sellingInput.value);
+      const qtyVal = parseFloat(qtyInput.value);
+      const subHint = document.getElementById('priceSubHint');
+      const profitHint = document.getElementById('profitHint');
+      const totalHint = document.getElementById('totalValueHint');
+
+      subHint.textContent = (cfg.sub && !isNaN(priceVal)) ? `= ${fmtNum(priceVal/cfg.subPerBase)} / ${cfg.subLabel} (auto)` : '';
+      if(!isNaN(sellVal) && !isNaN(priceVal)){
+        const profit = sellVal - priceVal;
+        const margin = sellVal > 0 ? (profit/sellVal)*100 : 0;
+        profitHint.textContent = `Profit: ${fmtINR(profit)} / ${cfg.baseLabel} (${margin.toFixed(1)}% margin)`;
+      } else { profitHint.textContent = ''; }
+      if(!isNaN(priceVal) && !isNaN(qtyVal)){
+        const qtyInBase = qtyToBase(qtyVal, qtyUnitSel.value, unitTypeSel.value);
+        totalHint.textContent = `Stock value: ${fmtINR(qtyInBase*priceVal)} (auto)`;
+      } else { totalHint.textContent = ''; }
+    }
+
+    unitTypeSel.addEventListener('change', refreshUnitDependent);
+    qtyUnitSel.addEventListener('change', updateHints);
+    priceInput.addEventListener('input', updateHints);
+    sellingInput.addEventListener('input', updateHints);
+    qtyInput.addEventListener('input', updateHints);
+
+    document.getElementById('bulkCalcBtn').addEventListener('click', () => {
+      const amount = parseFloat(document.getElementById('f-bulkAmount').value);
+      const qty = parseFloat(document.getElementById('f-bulkQty').value);
+      const unit = bulkUnitSel.value;
+      if(isNaN(amount) || isNaN(qty) || qty <= 0){
+        document.getElementById('formError').textContent = 'Enter both the amount paid and quantity purchased to calculate a rate.';
+        return;
+      }
+      document.getElementById('formError').textContent = '';
+      const qtyInBase = qtyToBase(qty, unit, unitTypeSel.value);
+      const rate = amount / qtyInBase;
+      priceInput.value = rate.toFixed(2);
+      updateHints();
+    });
+
+    updateHints();
+  }
+
+  function renderSummary(){
+    const totalItems = items.length;
+    const totalValue = items.reduce((s,i)=>s+computeItem(i).totalValue, 0);
+    const totalProfit = items.reduce((s,i)=>{ const c = computeItem(i); return s + (c.totalProfit||0); }, 0);
+    const hasAnyProfit = items.some(i => i.sellingPriceBase !== null && i.sellingPriceBase !== undefined && !isNaN(i.sellingPriceBase));
+    const lowStockCount = items.filter(i => computeItem(i).isLowStock).length;
+    document.getElementById('summary').innerHTML = `
+      <div class="summary-card"><div class="label">Items on register</div><div class="value">${totalItems}</div></div>
+      <div class="summary-card"><div class="label">Total stock value</div><div class="value">${fmtINR(totalValue)}</div></div>
+      ${hasAnyProfit ? `<div class="summary-card"><div class="label">Potential profit</div><div class="value">${fmtINR(totalProfit)}</div></div>` : ''}
+      ${lowStockCount > 0 ? `<div class="summary-card warn"><div class="label">Low on stock</div><div class="value">${lowStockCount}</div></div>` : ''}
+    `;
+  }
+
+  function sortItems(list){
+    const arr = list.slice();
+    switch(sortMode){
+      case 'value-desc': return arr.sort((a,b)=>computeItem(b).totalValue - computeItem(a).totalValue);
+      case 'qty-asc': return arr.sort((a,b)=>computeItem(a).qtyInBase - computeItem(b).qtyInBase);
+      case 'low-first': return arr.sort((a,b)=>(computeItem(b).isLowStock?1:0) - (computeItem(a).isLowStock?1:0));
+      case 'updated-desc': return arr.sort((a,b)=>(b.updatedAt||0) - (a.updatedAt||0));
+      default: return arr.sort((a,b)=>a.name.localeCompare(b.name));
+    }
+  }
+
+  function renderRegister(){
+    const host = document.getElementById('registerBody');
+    if(!loaded){ host.innerHTML = '<div class="loading">Loading register…</div>'; return; }
+    const term = searchTerm.trim().toLowerCase();
+    let filtered = items.filter(i => !term || i.name.toLowerCase().includes(term) || (i.category||'').toLowerCase().includes(term));
+    filtered = sortItems(filtered);
+
+    if(items.length === 0){
+      host.innerHTML = `<div class="empty-state"><h2>The register is empty</h2><p>Add your first item to start tracking buying price, selling price and stock value automatically.</p></div>`;
+      return;
+    }
+    if(filtered.length === 0){
+      host.innerHTML = `<div class="empty-state"><p>No items match "${escapeHtml(searchTerm)}".</p></div>`;
+      return;
+    }
+
+    host.innerHTML = `<div class="cards">${filtered.map(item => {
+      const cfg = UNIT_CONFIG[item.unitType];
+      const c = computeItem(item);
+      const hasSelling = item.sellingPriceBase !== null && item.sellingPriceBase !== undefined && !isNaN(item.sellingPriceBase);
+      return `
+        <div class="card ${c.isLowStock ? 'low-stock' : ''}">
+          <div class="card-top">
+            <div class="card-title">
+              <span class="item-name">${escapeHtml(item.name)}</span>
+              ${item.category ? `<span class="item-category">${escapeHtml(item.category)}</span>` : ''}
+              ${c.isLowStock ? `<span class="badge-low">Low stock</span>` : ''}
+            </div>
+            <span class="updated-at">Updated ${fmtDate(item.updatedAt)}</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><span class="k">Quantity</span><span class="v strong">${fmtNum(item.qtyValue)} ${item.qtyUnit}</span></div>
+            <div class="stat"><span class="k">Buy / ${cfg.baseLabel}</span><span class="v">${fmtINR(item.priceBase)}</span></div>
+            ${cfg.sub ? `<div class="stat"><span class="k">Buy / ${cfg.subLabel}</span><span class="v">${fmtINR(c.priceSub)}</span></div>` : ''}
+            ${hasSelling ? `<div class="stat"><span class="k">Sell / ${cfg.baseLabel}</span><span class="v">${fmtINR(item.sellingPriceBase)}</span></div>` : ''}
+            ${hasSelling ? `<div class="stat"><span class="k">Margin</span><span class="v ${c.profitBase>=0?'teal':'danger'}">${c.marginPct!==null?c.marginPct.toFixed(1)+'%':'—'}</span></div>` : ''}
+            <div class="stat"><span class="k">Total value</span><span class="v strong teal">${fmtINR(c.totalValue)}</span></div>
+            ${hasSelling ? `<div class="stat"><span class="k">Potential profit</span><span class="v strong ${c.totalProfit>=0?'teal':'danger'}">${fmtINR(c.totalProfit)}</span></div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button class="btn-text-edit" data-edit="${item.id}">Edit</button>
+            <button class="btn-text-danger" data-delete="${item.id}">Remove</button>
+          </div>
+        </div>
+      `;
+    }).join('')}</div>`;
+
+    host.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', ()=>openEditForm(b.getAttribute('data-edit'))));
+    host.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', ()=>deleteItem(b.getAttribute('data-delete'))));
+  }
+
+  function buildCSV(){
+    const header = ['Name','Category','Unit type','Quantity','Qty unit','Buying price/base','Buying price/sub','Selling price/base','Margin %','Total value','Potential profit','Low stock threshold','Last updated'];
+    const rows = items.map(item => {
+      const cfg = UNIT_CONFIG[item.unitType];
+      const c = computeItem(item);
+      return [
+        item.name, item.category||'', cfg.baseLabel, item.qtyValue, item.qtyUnit,
+        item.priceBase, c.priceSub!==null?c.priceSub.toFixed(3):'',
+        item.sellingPriceBase!==null && item.sellingPriceBase!==undefined ? item.sellingPriceBase : '',
+        c.marginPct!==null?c.marginPct.toFixed(1):'',
+        c.totalValue.toFixed(2),
+        c.totalProfit!==null?c.totalProfit.toFixed(2):'',
+        item.lowStockThreshold!==null && item.lowStockThreshold!==undefined ? item.lowStockThreshold : '',
+        fmtDate(item.updatedAt)
+      ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+    });
+    return [header.join(','), ...rows].join('\n');
+  }
+
+  function renderExport(){
+    const host = document.getElementById('exportHost');
+    if(!exportOpen){ host.innerHTML=''; return; }
+    if(items.length === 0){
+      host.innerHTML = `<div class="save-error" style="background:var(--teal-tint);border-color:var(--teal);color:var(--teal-dark);">Add an item first — there's nothing to export yet.</div>`;
+      return;
+    }
+    const csv = buildCSV();
+    host.innerHTML = `
+      <div class="export-box">
+        <textarea id="csvArea" readonly>${escapeHtml(csv)}</textarea>
+        <div style="margin-top:6px;">
+          <button class="btn-ghost btn-small" id="copyCsvBtn">Copy to clipboard</button>
+          <span class="copy-msg" id="copyMsg"></span>
+        </div>
+      </div>`;
+    document.getElementById('copyCsvBtn').addEventListener('click', async () => {
+      const area = document.getElementById('csvArea');
+      let copied = false;
+      try{ await navigator.clipboard.writeText(csv); copied = true; }
+      catch(e){
+        area.select();
+        try{ document.execCommand('copy'); copied = true; }catch(e2){}
+      }
+      document.getElementById('copyMsg').textContent = copied ? 'Copied — paste into Excel or Sheets.' : 'Select the text above and copy manually.';
+    });
+  }
+
+  function renderSaveError(){
+    document.getElementById('saveError').innerHTML = saveErrorMsg ? `<div class="save-error">${escapeHtml(saveErrorMsg)}</div>` : '';
+  }
+
+  function render(){
+    renderSaveError();
+    renderExport();
+    renderSummary();
+    document.getElementById('formHost').innerHTML = renderForm();
+    wireFormEvents();
+    renderRegister();
+    document.getElementById('toggleFormBtn').textContent = (formOpen && !editingId) ? 'Close form' : '+ Add item';
+    document.getElementById('footerNote').textContent = loaded ? 'Saved automatically on this device.' : '';
+  }
+
+  document.getElementById('toggleFormBtn').addEventListener('click', () => {
+    if(formOpen && !editingId){ closeForm(); } else { openAddForm(); }
+  });
+  document.getElementById('searchBox').addEventListener('input', (e) => { searchTerm = e.target.value; renderRegister(); });
+  document.getElementById('sortSelect').addEventListener('change', (e) => { sortMode = e.target.value; renderRegister(); });
+  document.getElementById('exportBtn').addEventListener('click', () => { exportOpen = !exportOpen; renderExport(); });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(items.length === 0) return;
+    if(!confirm('This will remove every item from the register. Continue?')) return;
+    items = [];
+    saveItems();
+  });
+
+  loadItems();
+})();
+</script>
+</body>
+</html>
